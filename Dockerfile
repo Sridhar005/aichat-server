@@ -3,11 +3,13 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
 COPY MyApp.slnx .
-COPY src/MyApp.Domain/*.csproj ./src/MyApp.Domain/
-COPY src/MyApp.Application/*.csproj ./src/MyApp.Application/
-COPY src/MyApp.Infrastructure/*.csproj ./src/MyApp.Infrastructure/
-COPY src/MyApp.Api/*.csproj ./src/MyApp.Api/
-COPY tests/MyApp.Tests/*.csproj ./tests/MyApp.Tests/
+COPY MyApp.Controllers/*.csproj ./MyApp.Controllers/
+COPY MyApp.Data/*.csproj ./MyApp.Data/
+COPY MyApp.Middleware/*.csproj ./MyApp.Middleware/
+COPY MyApp.Models/*.csproj ./MyApp.Models/
+COPY MyApp.Services/*.csproj ./MyApp.Services/
+COPY MyApp.Api/*.csproj ./MyApp.Api/
+
 
 RUN dotnet restore
 
