@@ -1,10 +1,12 @@
 using AIChatApp.Data;
 using AIChatApp.Services;
-using Microsoft.EntityFrameworkCore;
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+Env.Load(".env");
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>

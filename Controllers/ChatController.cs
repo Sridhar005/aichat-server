@@ -29,10 +29,11 @@ public class ChatController : ControllerBase
         return Guid.Parse(claim);
     }
 
+
     [HttpPost("send")]
     public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest req)
     {
-        if (req == null || req.ChatId == Guid.Empty || string.IsNullOrWhiteSpace(req.Message))
+        if (req == null || string.IsNullOrWhiteSpace(req.Message))
             return BadRequest("Invalid request");
 
         try
@@ -40,7 +41,8 @@ public class ChatController : ControllerBase
             var reply = await _chatService.SendMessage(
                 req.ChatId,
                 req.Message,
-                GetUserId());
+                GetUserId()
+            );
 
             return Ok(new { reply });
         }
@@ -54,7 +56,7 @@ public class ChatController : ControllerBase
         }
     }
 
-    [HttpGet("history/{chatId}")]
+    [HttpGet("{chatId}/history")]
     public async Task<IActionResult> GetHistory(Guid chatId)
     {
         try

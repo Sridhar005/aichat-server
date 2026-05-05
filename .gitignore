@@ -10,3 +10,4 @@ obj/
 # Rider / VSCode optional
 .idea/
 .vscode/
+.env

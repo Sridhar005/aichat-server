@@ -21,16 +21,4 @@ public class CacheService
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(minutes)
         });
     }
-
-    public async Task<T?> GetAsync<T>(string key)
-    {
-        var data = await _cache.GetStringAsync(key);
-
-        return data == null ? default : JsonSerializer.Deserialize<T>(data);
-    }
-
-    public async Task RemoveAsync(string key)
-    {
-        await _cache.RemoveAsync(key);
-    }
 }

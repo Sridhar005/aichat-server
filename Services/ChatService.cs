@@ -9,16 +9,13 @@ public class ChatService
 {
     private readonly AppDbContext _context;
     private readonly GeminiClient _gemini;
-    private readonly CacheService _cache;
 
     public ChatService(
         AppDbContext context,
-        GeminiClient gemini,
-        CacheService cache)
+        GeminiClient gemini)
     {
         _context = context;
         _gemini = gemini;
-        _cache = cache;
     }
 
     public async Task<Chat> CreateChat(Guid userId)
@@ -54,37 +51,32 @@ public class ChatService
         if (!authorized)
             throw new UnauthorizedAccessException("Unauthorized chat access");
 
-        string cacheKey = $"chat_history_{chatId}";
-
-        var cached = await _cache.GetAsync<List<ChatMessage>>(cacheKey);
-        if (cached != null)
-            return cached;
-
         var messages = await _context.Messages
             .AsNoTracking()
             .Where(m => m.ChatId == chatId)
             .OrderBy(m => m.Timestamp)
             .ToListAsync();
 
-        await _cache.SetAsync(cacheKey, messages, minutes: 5);
-
         return messages;
     }
 
-    public async Task<string> SendMessage(Guid chatId, string message, Guid userId)
-    {
-        var chat = await _context.Chats
-            .FirstOrDefaultAsync(c => c.Id == chatId && c.UserId == userId);
 
-        if (chat == null)
-            throw new UnauthorizedAccessException("Invalid chat");
+    public async Task<string> SendMessage(
+               Guid? chatId,
+               string message,
+               Guid userId)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            throw new ArgumentException("Message required");
 
         var user = await _context.Users.FindAsync(userId)
             ?? throw new Exception("User not found");
 
         user.Plan ??= "basic";
 
-        // ✅ Count ONLY USER messages (not AI)
+        // =========================
+        // ✅ BASIC PLAN
+        // =========================
         if (user.Plan == "basic")
         {
             DateTime today = DateTime.UtcNow.Date;
@@ -97,38 +89,67 @@ public class ChatService
 
             if (todayCount >= 20)
                 throw new InvalidOperationException("LIMIT_REACHED");
+
+            // ✅ No ChatId, no DB persistence
+            return await _gemini.GetReplyAsync(message);
         }
 
-        var userMessage = new ChatMessage
+        // =========================
+        // ✅ PRO PLAN
+        // =========================
+
+        // ✅ Create chat if not provided
+        if (!chatId.HasValue || chatId == Guid.Empty)
+        {
+            var newChat = new Chat
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Title = "New Chat",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Chats.Add(newChat);
+            await _context.SaveChangesAsync();
+
+            chatId = newChat.Id;
+        }
+
+        var chat = await _context.Chats
+            .FirstOrDefaultAsync(c =>
+                c.Id == chatId &&
+                c.UserId == userId);
+
+        if (chat == null)
+            throw new UnauthorizedAccessException("Invalid chat");
+
+        // ✅ Save user message
+        _context.Messages.Add(new ChatMessage
         {
             Id = Guid.NewGuid(),
-            ChatId = chatId,
+            ChatId = chat.Id,
             UserId = userId,
             Sender = "user",
             Text = message,
             Timestamp = DateTime.UtcNow
-        };
+        });
 
-        _context.Messages.Add(userMessage);
+        await _context.SaveChangesAsync();
 
+        // ✅ Gemini reply
         string reply = await _gemini.GetReplyAsync(message);
 
-        var aiMessage = new ChatMessage
+        _context.Messages.Add(new ChatMessage
         {
             Id = Guid.NewGuid(),
-            ChatId = chatId,
+            ChatId = chat.Id,
             UserId = userId,
             Sender = "ai",
             Text = reply,
             Timestamp = DateTime.UtcNow
-        };
-
-        _context.Messages.Add(aiMessage);
+        });
 
         await _context.SaveChangesAsync();
-
-        // ✅ Invalidate cache so history updates immediately
-        await _cache.RemoveAsync($"chat_history_{chatId}");
 
         return reply;
     }
