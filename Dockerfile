@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
-COPY MyApp.sln .
+COPY MyApp.slnx .
 COPY src/MyApp.Domain/*.csproj ./src/MyApp.Domain/
 COPY src/MyApp.Application/*.csproj ./src/MyApp.Application/
 COPY src/MyApp.Infrastructure/*.csproj ./src/MyApp.Infrastructure/
