@@ -93,6 +93,7 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors("React");
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapGet("/health", () => Results.Ok("Healthy"));
 app.MapControllers();
 
 app.Run();
