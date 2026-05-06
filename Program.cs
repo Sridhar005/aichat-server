@@ -14,7 +14,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("React", policy =>
     {
         policy.WithOrigins(
-            "https://aichat-client-woad.vercel.app/",
+            "https://aichat-client-woad.vercel.app",
             "http://localhost:5173",
             "http://localhost:5174"
             )
