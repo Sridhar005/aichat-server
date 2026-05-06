@@ -9,7 +9,6 @@ namespace AIChatApp.Controllers;
 
 [ApiController]
 [Route("chat")]
-[Authorize]
 public class ChatController : ControllerBase
 {
     private readonly ChatService _chatService;
@@ -29,7 +28,7 @@ public class ChatController : ControllerBase
         return Guid.Parse(claim);
     }
 
-
+    [AllowAnonymous]
     [HttpPost("send")]
     public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest req)
     {
@@ -55,7 +54,7 @@ public class ChatController : ControllerBase
             return Forbid();
         }
     }
-
+    [AllowAnonymous]
     [HttpGet("{chatId}/history")]
     public async Task<IActionResult> GetHistory(Guid chatId)
     {
@@ -69,13 +68,14 @@ public class ChatController : ControllerBase
             return Forbid();
         }
     }
-
+    [AllowAnonymous]
     [HttpGet("list")]
     public async Task<IActionResult> GetChats()
     {
         return Ok(await _chatService.GetChats(GetUserId()));
     }
 
+    [AllowAnonymous]
     [HttpPost("new")]
     public async Task<IActionResult> CreateChat()
     {

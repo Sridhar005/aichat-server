@@ -6,7 +6,6 @@ namespace AIChatApp.Controllers;
 
 [ApiController]
 [Route("user")]
-[Authorize]
 public class UserController : ControllerBase
 {
     private readonly AuthService _authService;
@@ -16,7 +15,7 @@ public class UserController : ControllerBase
         _authService = authService;
     }
 
-
+    [AllowAnonymous]
     [HttpGet("me")]
     public IActionResult GetCurrentUser()
     {
@@ -28,7 +27,7 @@ public class UserController : ControllerBase
         return Ok(user);
     }
 
- 
+    [AllowAnonymous]
     [HttpPost("upgrade")]
     public async Task<IActionResult> UpgradeToPro()
     {

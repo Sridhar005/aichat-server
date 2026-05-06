@@ -36,26 +36,28 @@ public class AuthController : ControllerBase
         });
     }
 
-    [HttpGet("me")]
-    public IActionResult Me()
-    {
-        var token = Request.Cookies["AuthToken"];
+    //[AllowAnonymous]
+    //[HttpGet("me")]
+    //public IActionResult Me()
+    //{
+    //    var token = Request.Cookies["AuthToken"];
 
-        if (string.IsNullOrEmpty(token))
-            return Unauthorized();
+    //    if (string.IsNullOrEmpty(token))
+    //        return Unauthorized();
 
-        var principal = _tokenService.ValidateToken(token);
+    //    var principal = _tokenService.ValidateToken(token);
 
-        if (principal == null)
-            return Unauthorized();
+    //    if (principal == null)
+    //        return Unauthorized();
 
-        var email = principal.FindFirst(ClaimTypes.Email)?.Value;
+    //    var email = principal.FindFirst(ClaimTypes.Email)?.Value;
 
-        return Ok(new
-        {
-            email
-        });
-    }
+    //    return Ok(new
+    //    {
+    //        email
+    //    });
+    //}
+
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login(Login request)
@@ -90,7 +92,7 @@ public class AuthController : ControllerBase
         });
     }
 
-
+    [AllowAnonymous]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {

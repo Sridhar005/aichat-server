@@ -9,20 +9,36 @@ using System.Text;
 Env.Load(".env");
 var builder = WebApplication.CreateBuilder(args);
 
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("React", policy =>
+//    {
+//        policy.WithOrigins(
+//            "https://aichat-client-woad.vercel.app",
+//            "http://localhost:5173",
+//            "http://localhost:5174"
+//            )
+//              .AllowAnyHeader()
+//              .AllowAnyMethod()
+//              .AllowCredentials();
+//    });
+//});
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("React", policy =>
     {
-        policy.WithOrigins(
-            "https://aichat-client-woad.vercel.app",
-            "http://localhost:5173",
-            "http://localhost:5174"
-            )
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy
+            // ✅ Allow ALL Vercel deployments for your frontend
+            .SetIsOriginAllowed(origin =>
+                origin.StartsWith("https://aichat-client") ||
+                origin.StartsWith("http://localhost"))
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
+
 builder.Services.AddControllers(options =>
 {
     var policy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
