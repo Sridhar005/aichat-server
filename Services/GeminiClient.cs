@@ -101,4 +101,22 @@ public class GeminiClient
 
         return text;
     }
+
+    public async Task<string> GenerateChatTitleAsync(
+           string userMessage,
+           string aiReply,
+           CancellationToken cancellationToken = default)
+    {
+        var prompt = $"""
+Suggest a short, clear chat title (max 6 words) for this conversation:
+
+User: {userMessage}
+AI: {aiReply}
+
+Return ONLY the title. No quotes.
+""";
+
+        return await GetReplyAsync(prompt, cancellationToken);
+    }
+
 }

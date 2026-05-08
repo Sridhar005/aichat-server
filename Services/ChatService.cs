@@ -61,10 +61,10 @@ public class ChatService
     }
 
 
-    public async Task<string> SendMessage(
-               Guid? chatId,
-               string message,
-               Guid userId)
+    public async Task<SendMessageResponse> SendMessage(
+    Guid? chatId,
+    string message,
+    Guid userId)
     {
         if (string.IsNullOrWhiteSpace(message))
             throw new ArgumentException("Message required");
@@ -90,8 +90,16 @@ public class ChatService
             if (todayCount >= 20)
                 throw new InvalidOperationException("LIMIT_REACHED");
 
-            // ✅ No ChatId, no DB persistence
-            return await _gemini.GetReplyAsync(message);
+            // ✅ Gemini reply (string)
+            string reply = await _gemini.GetReplyAsync(message);
+
+            // ✅ WRAP STRING INTO RESPONSE OBJECT
+            return new SendMessageResponse
+            {
+                ChatId = Guid.Empty,        // Basic users don’t have chats
+                ChatTitle = "Basic Chat",   // Optional label
+                Reply = reply
+            };
         }
 
         // =========================
@@ -111,14 +119,11 @@ public class ChatService
 
             _context.Chats.Add(newChat);
             await _context.SaveChangesAsync();
-
             chatId = newChat.Id;
         }
 
-        var chat = await _context.Chats
-            .FirstOrDefaultAsync(c =>
-                c.Id == chatId &&
-                c.UserId == userId);
+        var chat = await _context.Chats.FirstOrDefaultAsync(c =>
+            c.Id == chatId && c.UserId == userId);
 
         if (chat == null)
             throw new UnauthorizedAccessException("Invalid chat");
@@ -136,21 +141,60 @@ public class ChatService
 
         await _context.SaveChangesAsync();
 
-        // ✅ Gemini reply
-        string reply = await _gemini.GetReplyAsync(message);
+        // ✅ AI reply
+        string replyPro = await _gemini.GetReplyAsync(message);
 
+        // ✅ Generate title only once
+        if (chat.Title == "New Chat")
+        {
+            try
+            {
+                string title = await _gemini.GenerateChatTitleAsync(message, replyPro);
+                chat.Title = title.Length > 200 ? title[..200] : title;
+            }
+            catch
+            {
+                // Safe fallback
+            }
+        }
+
+        // ✅ Save AI message
         _context.Messages.Add(new ChatMessage
         {
             Id = Guid.NewGuid(),
             ChatId = chat.Id,
             UserId = userId,
             Sender = "ai",
-            Text = reply,
+            Text = replyPro,
             Timestamp = DateTime.UtcNow
         });
 
         await _context.SaveChangesAsync();
 
-        return reply;
+        // ✅ Return full response
+        return new SendMessageResponse
+        {
+            ChatId = chat.Id,
+            ChatTitle = chat.Title,
+            Reply = replyPro
+        };
+    }
+    public async Task DeleteChat(Guid chatId, Guid userId)
+    {
+        // ✅ Ensure chat belongs to user
+        var chat = await _context.Chats
+            .FirstOrDefaultAsync(c => c.Id == chatId && c.UserId == userId);
+
+        if (chat == null)
+            throw new UnauthorizedAccessException("Chat not found or unauthorized");
+
+        // ✅ Delete messages first
+        var messages = _context.Messages.Where(m => m.ChatId == chatId);
+        _context.Messages.RemoveRange(messages);
+
+        // ✅ Delete chat
+        _context.Chats.Remove(chat);
+
+        await _context.SaveChangesAsync();
     }
 }

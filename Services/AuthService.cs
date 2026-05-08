@@ -133,6 +133,16 @@ public class AuthService
         var accessToken = _tokenService.GenerateToken(user);
         var refreshToken = _tokenService.GenerateRefreshToken();
 
+        _context.RefreshTokens.Add(new RefreshToken
+        {
+            UserId = user.Id,
+            Token = refreshToken,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow,
+            Revoked = false
+        });
+
+
         await _context.SaveChangesAsync();
 
         // 🍪 Set cookies (USED by your auth system)
