@@ -28,22 +28,26 @@ public class ChatController : ControllerBase
         return Guid.Parse(claim);
     }
 
+
+
     [AllowAnonymous]
     [HttpPost("send")]
     public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest req)
     {
-        if (req == null || string.IsNullOrWhiteSpace(req.Message))
-            return BadRequest("Invalid request");
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
         try
         {
-            var reply = await _chatService.SendMessage(
-                req.ChatId,
-                req.Message,
-                GetUserId()
-            );
+            SendMessageResponse result =
+                await _chatService.SendMessage(
+                    req.ChatId,
+                    req.Message,
+                    GetUserId()
+                );
 
-            return Ok(new { reply });
+            // ✅ Return strongly‑typed response DTO
+            return Ok(result);
         }
         catch (InvalidOperationException ex) when (ex.Message == "LIMIT_REACHED")
         {
@@ -54,6 +58,8 @@ public class ChatController : ControllerBase
             return Forbid();
         }
     }
+
+
     [AllowAnonymous]
     [HttpGet("{chatId}/history")]
     public async Task<IActionResult> GetHistory(Guid chatId)
@@ -68,6 +74,7 @@ public class ChatController : ControllerBase
             return Forbid();
         }
     }
+
     [AllowAnonymous]
     [HttpGet("list")]
     public async Task<IActionResult> GetChats()
@@ -81,4 +88,21 @@ public class ChatController : ControllerBase
     {
         return Ok(await _chatService.CreateChat(GetUserId()));
     }
+
+
+    [AllowAnonymous]
+    [HttpDelete("{chatId}")]
+    public async Task<IActionResult> DeleteChat(Guid chatId)
+    {
+        try
+        {
+            await _chatService.DeleteChat(chatId, GetUserId());
+            return NoContent(); // ✅ 204
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+
 }
