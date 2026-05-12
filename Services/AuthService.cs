@@ -1,6 +1,7 @@
 ﻿using AIChatApp.Data;
 using AIChatApp.Models;
 using Microsoft.EntityFrameworkCore;
+using MyApp.Services;
 using System.Security.Claims;
 
 namespace AIChatApp.Services;
@@ -9,11 +10,13 @@ public class AuthService
 {
     private readonly AppDbContext _context;
     private readonly TokenService _tokenService;
+    private readonly IEmailService _emailService;
 
-    public AuthService(AppDbContext context, TokenService tokenService)
+    public AuthService(AppDbContext context, TokenService tokenService, EmailService emailService)
     {
         _context = context;
         _tokenService = tokenService;
+        _emailService = emailService;
     }
     public async Task<object> RegisterAsync(Register request)
     {
@@ -252,5 +255,27 @@ public class AuthService
             Expires = DateTime.UtcNow.AddDays(7)
         });
     }
+
+    public async Task ForgotPasswordAsync(string email)
+{
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+    if (user == null)
+        return; // prevent email enumeration
+
+    var token = Guid.NewGuid().ToString("N");
+
+    await _emailService.SendAsync(
+        user.Email,
+        "Reset Password",
+        $"Your reset token is: {token}"
+    );
+}
+
+public async Task ResetPasswordAsync(string token, string newPassword)
+{
+    // Placeholder implementation (no SendGrid / no DB tokens)
+    // You can extend later when you add a real provider again
+    await Task.CompletedTask;
+}
 
 }
