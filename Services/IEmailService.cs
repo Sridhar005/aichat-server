@@ -1,4 +1,4 @@
-﻿namespace MyApp.Services
+﻿namespace AIChatApp.Services
 {
     public interface IEmailService
     {
