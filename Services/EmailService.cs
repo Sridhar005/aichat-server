@@ -1,46 +1,18 @@
-﻿using SendGrid;
-using SendGrid.Helpers.Mail;
+﻿using MyApp.Services;
+using System.Net;
+using System.Net.Mail;
 
-namespace MyApp.Services
+namespace AIChatApp.Services;
+
+public class EmailService : IEmailService
 {
-    public class EmailService : IEmailService
+    public async Task SendAsync(string to, string subject, string body)
     {
-        private readonly IConfiguration _configuration;
+        // ✅ TEMP: log instead of sending
+        Console.WriteLine($"EMAIL TO: {to}");
+        Console.WriteLine(subject);
+        Console.WriteLine(body);
 
-        public EmailService(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
-
-        public async Task SendAsync(string to, string subject, string body)
-        {
-            var apiKey = _configuration["SendGrid:ApiKey"];
-            var fromEmail = _configuration["SendGrid:FromEmail"];
-            var fromName = _configuration["SendGrid:FromName"];
-
-            if (string.IsNullOrEmpty(apiKey))
-                throw new Exception("SendGrid API Key is not configured");
-
-            var client = new SendGridClient(apiKey);
-
-            var from = new EmailAddress(fromEmail, fromName);
-            var toEmail = new EmailAddress(to);
-
-            var message = MailHelper.CreateSingleEmail(
-                from,
-                toEmail,
-                subject,
-                body,  
-                body   
-            );
-
-            var response = await client.SendEmailAsync(message);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var responseBody = await response.Body.ReadAsStringAsync();
-                throw new Exception($"SendGrid failed: {response.StatusCode} - {responseBody}");
-            }
-        }
+        await Task.CompletedTask;
     }
 }
