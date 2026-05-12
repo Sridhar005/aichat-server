@@ -1,7 +1,6 @@
 ﻿using AIChatApp.Data;
 using AIChatApp.Models;
 using Microsoft.EntityFrameworkCore;
-using MyApp.Services;
 using System.Security.Claims;
 
 namespace AIChatApp.Services;
