@@ -58,7 +58,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<CacheService>();
-
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpClient<GeminiClient>();
 builder.Services.AddStackExchangeRedisCache(options =>
 {
