@@ -107,30 +107,4 @@ public class AuthController : ControllerBase
             message = "Logged out"
         });
     }
-
-    [AllowAnonymous]
-    [HttpPost("forgot-password")]
-    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
-    {
-        await _authService.ForgotPasswordAsync(request.Email);
-        return Ok();
-    }
-
-    [AllowAnonymous]
-    [HttpPost("reset-password")]
-    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
-    {
-        await _authService.ResetPasswordAsync(
-            request.Token,
-            request.NewPassword
-        );
-
-        return Ok(new
-        {
-            success = true,
-            message = "Password has been reset"
-        });
-    }
-
-
 }
