@@ -16,7 +16,6 @@ public class AppDbContext : DbContext
     public DbSet<Chat> Chats => Set<Chat>();
     public DbSet<ChatMessage> Messages => Set<ChatMessage>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
-    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
 
     // ✅ THIS IS WHERE YOUR CODE GOES
     protected override void OnModelCreating(ModelBuilder modelBuilder)
